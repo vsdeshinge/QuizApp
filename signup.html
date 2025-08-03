@@ -206,17 +206,8 @@
           dateSubmitted: new Date().toISOString()
         });
 
-        messageBox.textContent = "✅ Registration submitted successfully!";
-        messageBox.className = "alert success";
-        messageBox.style.display = "block";
-
-        document.getElementById("signupForm").reset();
-        container.innerHTML = `<div class="qualification-group">
-          <input type="text" placeholder="Exam Passed" class="exam"><br>
-          <input type="text" placeholder="Year" class="year"><br>
-          <input type="text" placeholder="Board/University" class="board"><br>
-          <input type="text" placeholder="Percentage %" class="percentage"><br>
-        </div>`;
+        // ✅ Directly go to login.html after successful registration
+        window.location.href = "login.html";
 
       } catch (error) {
         messageBox.textContent = "❌ Error: " + error.message;

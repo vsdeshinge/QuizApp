@@ -79,6 +79,23 @@
       box-shadow: 0 4px 8px rgba(0,0,0,0.15);
     }
 
+    .signup-link {
+      margin-top: 15px;
+      font-size: 0.95rem;
+      color: #555;
+    }
+
+    .signup-link a {
+      color: #0061ff;
+      font-weight: 600;
+      text-decoration: none;
+      margin-left: 5px;
+    }
+
+    .signup-link a:hover {
+      text-decoration: underline;
+    }
+
     .error-message {
       color: red;
       margin-top: 10px;
@@ -106,6 +123,10 @@
     <input type="password" id="password" class="input-field" placeholder="Password" required>
     <button class="login-btn" id="login-btn">Login</button>
     <p id="error-message" class="error-message">Invalid username or password</p>
+
+    <p class="signup-link">Don't have an account?
+      <a href="signup.html">Sign up here</a>
+    </p>
   </div>
 
   <script type="module">
