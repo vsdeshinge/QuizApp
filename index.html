@@ -138,24 +138,26 @@
 
   <script>
     // Fetch topics from questions.json
-    fetch("questions.json")
-      .then(response => response.json())
-      .then(data => {
-        const topicContainer = document.getElementById("topic-buttons");
-        const topics = Object.keys(data); // Get topic names
 
-        topics.forEach(topic => {
-          const button = document.createElement("button");
-          button.textContent = topic.charAt(0).toUpperCase() + topic.slice(1);
-          button.onclick = () => startQuiz(topic);
-          topicContainer.appendChild(button);
-        });
-      })
-      .catch(error => console.error("Error loading topics:", error));
+  // Fetch sections (technologies)
+  fetch("sections.json")
+    .then(response => response.json())
+    .then(data => {
+      const topicContainer = document.getElementById("topic-buttons");
+      data.technologies.forEach(tech => {
+        const button = document.createElement("button");
+        button.textContent = tech;
+        button.onclick = () => startQuiz(tech);
+        topicContainer.appendChild(button);
+      });
+    })
+    .catch(error => console.error("Error loading sections:", error));
 
-    function startQuiz(topic) {
-      window.location.href = "question.html?topic=" + topic;
-    }
+  function startQuiz(tech) {
+    window.location.href = "question.html?topic=" + encodeURIComponent(tech);
+  }
+</script>
+
   </script>
 </body>
 </html>

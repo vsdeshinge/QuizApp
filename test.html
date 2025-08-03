@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Push Data to Firestore</title>
+  <style>
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background: linear-gradient(135deg, #0061ff, #363795);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      color: #fff;
+    }
+
+    /* Popup modal (Brand Style) */
+    .popup {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .popup-content {
+      background: #fff;
+      padding: 25px 30px;
+      border-radius: 14px;
+      width: 300px;
+      text-align: center;
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+      animation: fadeIn 0.5s ease;
+    }
+
+    .popup-content h3 {
+      margin-bottom: 15px;
+      color: #333;
+    }
+
+    select {
+      width: 90%;
+      padding: 12px;
+      margin: 10px 0;
+      border: 1.5px solid #ccc;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.3s ease;
+    }
+
+    select:focus {
+      border-color: #0061ff;
+      box-shadow: 0 0 6px rgba(0, 97, 255, 0.3);
+    }
+
+    .popup-content button {
+      background: linear-gradient(90deg, #0061ff, #363795);
+      color: #fff;
+      border: none;
+      padding: 12px;
+      margin-top: 12px;
+      width: 95%;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      transition: transform 0.2s ease, box-shadow 0.3s ease;
+    }
+
+    .popup-content button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Main container */
+    .container {
+      background: #fff;
+      color: #333;
+      padding: 25px 30px;
+      border-radius: 12px;
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+      width: 350px;
+      text-align: center;
+      animation: fadeIn 0.6s ease-in-out;
+      display: none;
+    }
+
+    input[type="text"] {
+      width: 90%;
+      padding: 10px;
+      margin: 8px 0;
+      border: 1.5px solid #ccc;
+      border-radius: 6px;
+      font-size: 14px;
+      transition: border-color 0.3s ease;
+    }
+
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #0061ff;
+      box-shadow: 0 0 6px rgba(0, 97, 255, 0.2);
+    }
+
+    .ansBtn {
+      margin: 5px;
+      padding: 10px;
+      background-color: #eee;
+      border: 1.5px solid transparent;
+      cursor: pointer;
+      border-radius: 6px;
+      width: 90%;
+      transition: all 0.2s ease;
+      font-weight: 500;
+    }
+
+    .ansBtn.selected {
+      background: linear-gradient(90deg, #0061ff, #363795);
+      color: white;
+      border: 2px solid #363795;
+      font-weight: 600;
+    }
+
+    button.submitBtn {
+      background: linear-gradient(90deg, #0061ff, #363795);
+      color: #fff;
+      border: none;
+      padding: 12px;
+      margin-top: 12px;
+      width: 95%;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      transition: transform 0.2s ease, box-shadow 0.3s ease;
+    }
+
+    button.submitBtn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .alert {
+      margin-top: 12px;
+      padding: 10px;
+      border-radius: 5px;
+      font-size: 14px;
+      display: none;
+    }
+
+    .alert.success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+    .alert.error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+
+    @keyframes fadeIn {
+      from {opacity: 0; transform: scale(0.9);}
+      to {opacity: 1; transform: scale(1);}
+    }
+  </style>
+</head>
+<body>
+  <!-- Popup for technology selection -->
+  <div class="popup" id="techPopup">
+    <div class="popup-content">
+      <h3>Select Technology</h3>
+      <select id="technologySelect" required>
+        <option value="">Loading...</option>
+      </select>
+      <button id="proceedBtn">Proceed</button>
+    </div>
+  </div>
+
+  <!-- Main form -->
+  <div class="container" id="quizContainer">
+    <h2>Push Quiz Data</h2>
+    <form id="quizForm">
+      <input type="text" id="question" placeholder="Enter Question" required><br>
+      <input type="text" id="opt1" placeholder="Option 1" required><br>
+      <input type="text" id="opt2" placeholder="Option 2" required><br>
+      <input type="text" id="opt3" placeholder="Option 3" required><br>
+      <input type="text" id="opt4" placeholder="Option 4" required><br>
+
+      <label style="font-weight: 600; display:block; margin:10px 0;">Select Correct Answer:</label>
+      <button type="button" class="ansBtn" data-opt="opt1">Option 1</button>
+      <button type="button" class="ansBtn" data-opt="opt2">Option 2</button>
+      <button type="button" class="ansBtn" data-opt="opt3">Option 3</button>
+      <button type="button" class="ansBtn" data-opt="opt4">Option 4</button>
+
+      <button type="submit" class="submitBtn">Push Data</button>
+    </form>
+    <div class="alert" id="message"></div>
+  </div>
+
+  <script type="module">
+    import { db } from "./firebase-config.js";
+    import { doc, setDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    let selectedTechnology = "";
+    let selectedAnswer = "";
+    const messageBox = document.getElementById("message");
+
+    // ✅ Fetch technology list
+    fetch("./sections.json")
+      .then(response => response.json())
+      .then(data => {
+        const dropdown = document.getElementById("technologySelect");
+        dropdown.innerHTML = '<option value="">Select Technology</option>';
+        data.technologies.forEach(tech => {
+          const option = document.createElement("option");
+          option.value = tech;
+          option.textContent = tech;
+          dropdown.appendChild(option);
+        });
+      });
+
+    // ✅ Proceed button action
+    document.getElementById("proceedBtn").addEventListener("click", () => {
+      const tech = document.getElementById("technologySelect").value;
+      if (!tech) {
+        alert("Please select a technology first.");
+        return;
+      }
+      selectedTechnology = tech;
+      document.getElementById("techPopup").style.display = "none";
+      document.getElementById("quizContainer").style.display = "block";
+    });
+
+    // ✅ Select correct answer button
+    document.querySelectorAll('.ansBtn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.ansBtn').forEach(b => b.classList.remove("selected"));
+        btn.classList.add("selected");
+        selectedAnswer = document.getElementById(btn.dataset.opt).value;
+      });
+    });
+
+    // ✅ Submit question to Firestore
+    document.getElementById("quizForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      if (!selectedAnswer) {
+        messageBox.textContent = "⚠️ Please select the correct answer before submitting.";
+        messageBox.className = "alert error";
+        messageBox.style.display = "block";
+        return;
+      }
+
+      const question = document.getElementById("question").value;
+      const options = [
+        document.getElementById("opt1").value,
+        document.getElementById("opt2").value,
+        document.getElementById("opt3").value,
+        document.getElementById("opt4").value
+      ];
+
+      try {
+        const querySnapshot = await getDocs(collection(db, "quiz"));
+        const nextId = "q" + (querySnapshot.size + 1);
+
+        await setDoc(doc(db, "quiz", nextId), {
+          technology: selectedTechnology,
+          question: question,
+          options: options,
+          answer: selectedAnswer
+        });
+
+        messageBox.textContent = `✅ Question added successfully under ${selectedTechnology}!`;
+        messageBox.className = "alert success";
+        messageBox.style.display = "block";
+
+        document.getElementById("quizForm").reset();
+        selectedAnswer = "";
+        document.querySelectorAll('.ansBtn').forEach(b => b.classList.remove("selected"));
+
+      } catch (error) {
+        messageBox.textContent = "❌ Error: " + error.message;
+        messageBox.className = "alert error";
+        messageBox.style.display = "block";
+      }
+    });
+  </script>
+</body>
+</html>

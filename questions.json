@@ -9,6 +9,16 @@
       "question": "Which planet is called the Red Planet?",
       "options": ["Earth", "Mars", "Venus", "Jupiter"],
       "answer": "Mars"
+    },
+    {
+      "question": "Which planet is called the Red Planet?",
+      "options": ["Earth", "Mars", "Venus", "Jupiter"],
+      "answer": "Mars"
+    },
+    {
+      "question": "Which planet is called the Red Planet?",
+      "options": ["Earth", "Mars", "Venus", "Jupiter"],
+      "answer": "Mars"
     }
   ],
   "Technology": [

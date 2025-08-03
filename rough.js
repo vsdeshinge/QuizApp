@@ -1,3 +1,29 @@
+<script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-analytics.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
+
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  const firebaseConfig = {
+    apiKey: "AIzaSyAIHLtA_9r40n7X3IYd4pSI7-ELz6N3Z_I",
+    authDomain: "vcequiz.firebaseapp.com",
+    databaseURL: "https://vcequiz-default-rtdb.firebaseio.com",
+    projectId: "vcequiz",
+    storageBucket: "vcequiz.firebasestorage.app",
+    messagingSenderId: "838646378494",
+    appId: "1:838646378494:web:d0e51b1b378cb674271aaf",
+    measurementId: "G-W9L1EMK00M"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+</script>
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -76,7 +102,7 @@
       margin-bottom: 15px;
     }
 
-    /* Options */
+    /* Options at bottom */
     .options {
       margin-top: auto;
       display: flex;
@@ -127,6 +153,7 @@
       box-shadow: 0 4px 8px rgba(0,0,0,0.15);
     }
 
+    /* Responsive */
     @media (max-width: 480px) {
       .quiz-box {
         padding: 12px;
@@ -164,47 +191,21 @@
     <button class="next-btn" onclick="nextQuestion()">Next</button>
   </div>
 
-  <script type="module">
-    import { db } from "./firebase-config.js";
-    import { collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
+  <script>
     let questions = [];
     let currentQuestion = 0;
     let score = 0;
     let timer;
     let selectedOption = null;
-
     const urlParams = new URLSearchParams(window.location.search);
-    const topic = urlParams.get('topic'); // Get selected technology
+    const topic = urlParams.get('topic');
 
-    // Fetch questions from Firestore
-    async function fetchQuestions() {
-      try {
-        const q = query(collection(db, "quiz"), where("technology", "==", topic));
-        const querySnapshot = await getDocs(q);
-
-        querySnapshot.forEach((doc) => {
-          const data = doc.data();
-          console.log("Fetched Question:", data);
-
-          questions.push({
-            question: data.question,
-            options: data.options,
-            answer: data.answer
-          });
-        });
-
-        if (questions.length === 0) {
-          document.getElementById("question").textContent =
-            "No questions available for this topic.";
-          return;
-        }
-
+    fetch("questions.json")
+      .then(response => response.json())
+      .then(data => {
+        questions = data[topic.charAt(0).toUpperCase() + topic.slice(1)];
         showQuestion();
-      } catch (error) {
-        console.error("Error fetching questions:", error);
-      }
-    }
+      });
 
     function startTimer() {
       let timeLeft = 20;
@@ -223,27 +224,24 @@
       clearInterval(timer);
       startTimer();
       selectedOption = null;
-
       let q = questions[currentQuestion];
       document.getElementById("question").textContent = q.question;
-
       let optionsHtml = "";
-      q.options.forEach((option, index) => {
+      q.options.forEach((option) => {
         optionsHtml += `<button onclick="selectOption(this,'${option}')">${option}</button>`;
       });
-
       document.getElementById("options").innerHTML = optionsHtml;
       document.getElementById("progress").style.width = 
-        ((currentQuestion + 1) / questions.length) * 100 + "%";
+        ((currentQuestion+1)/questions.length)*100 + "%";
     }
 
-    window.selectOption = function(button, value) {
+    function selectOption(button, value) {
       document.querySelectorAll(".options button").forEach(btn => btn.classList.remove("selected"));
       button.classList.add("selected");
       selectedOption = value;
     }
 
-    window.nextQuestion = function() {
+    function nextQuestion() {
       if (selectedOption && selectedOption === questions[currentQuestion].answer) {
         score++;
       }
@@ -254,9 +252,6 @@
         window.location.href = `score.html?score=${score}&total=${questions.length}&topic=${topic}`;
       }
     }
-
-    // Load questions on page start
-    fetchQuestions();
   </script>
 </body>
 </html>
