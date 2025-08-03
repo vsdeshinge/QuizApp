@@ -238,6 +238,14 @@
       messagesContainer.innerHTML = "";
       sessionCleared = Date.now(); // only new messages after this time will appear
     });
+
+     const loggedUser = localStorage.getItem("loggedInUser");
+
+  if (!loggedUser) {
+    // Redirect to login if not authenticated
+    alert("Please log in first to access the chatbox.");
+    window.location.href = "login.html";
+  }
   </script>
 </body>
 </html>
