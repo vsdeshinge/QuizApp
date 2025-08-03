@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz Questions</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <img src="assets/logo.png" alt="VCE Logo">
+  </header>
+
+  <div class="quiz-box">
+    <div class="progress-bar">
+      <div id="progress" class="progress-fill"></div>
+    </div>
+    <div class="timer">Time Left: <span id="time">20</span>s</div>
+    <h2 id="question"></h2>
+    <div class="options" id="options"></div>
+    <button onclick="nextQuestion()">Next</button>
+  </div>
+
+  <script>
+    let questions = [];
+    let currentQuestion = 0;
+    let score = 0;
+    let timer;
+    const urlParams = new URLSearchParams(window.location.search);
+    const topic = urlParams.get('topic');
+
+    fetch("questions.json")
+      .then(response => response.json())
+      .then(data => {
+        questions = data[topic];
+        showQuestion();
+      });
+
+    function startTimer() {
+      let timeLeft = 20;
+      document.getElementById("time").textContent = timeLeft;
+      timer = setInterval(() => {
+        timeLeft--;
+        document.getElementById("time").textContent = timeLeft;
+        if (timeLeft <= 0) {
+          clearInterval(timer);
+          nextQuestion();
+        }
+      }, 1000);
+    }
+
+    function showQuestion() {
+      clearInterval(timer);
+      startTimer();
+      let q = questions[currentQuestion];
+      document.getElementById("question").textContent = q.question;
+      let optionsHtml = "";
+      q.options.forEach(option => {
+        optionsHtml += `
+          <label>
+            <input type="radio" name="answer" value="${option}"> ${option}
+          </label>
+        `;
+      });
+      document.getElementById("options").innerHTML = optionsHtml;
+      document.getElementById("progress").style.width = 
+        ((currentQuestion+1)/questions.length)*100 + "%";
+    }
+
+    function nextQuestion() {
+      let selected = document.querySelector('input[name="answer"]:checked');
+      if (selected && selected.value === questions[currentQuestion].answer) {
+        score++;
+      }
+      currentQuestion++;
+      if (currentQuestion < questions.length) {
+        showQuestion();
+      } else {
+        window.location.href = `score.html?score=${score}&total=${questions.length}&topic=${topic}`;
+      }
+    }
+  </script>
+</body>
+</html>

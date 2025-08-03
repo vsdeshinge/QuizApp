@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VCE Quiz App</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <img src="assets/logo.png" alt="VCE Logo">
+  </header>
+
+  <div class="container">
+    <h1>Welcome to the VCE Quiz App</h1>
+    <p>Select a topic to test your knowledge:</p>
+    <select id="topic">
+      <option value="general">General Knowledge</option>
+      <option value="science">Science</option>
+      <option value="tech">Technology</option>
+    </select>
+    <br>
+    <button onclick="startQuiz()">Start Quiz</button>
+  </div>
+
+  <script>
+    function startQuiz() {
+      let topic = document.getElementById("topic").value;
+      window.location.href = "question.html?topic=" + topic;
+    }
+  </script>
+</body>
+</html>

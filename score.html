@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz Result</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <img src="assets/logo.png" alt="VCE Logo">
+  </header>
+
+  <div class="quiz-box">
+    <h2>Quiz Completed!</h2>
+    <p id="score" class="score-text"></p>
+    <h3>Leaderboard (Top 5)</h3>
+    <ul id="leaderboard" class="leaderboard"></ul>
+    <button onclick="restartQuiz()">Try Again</button>
+  </div>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const score = parseInt(urlParams.get('score'));
+    const total = parseInt(urlParams.get('total'));
+    const topic = urlParams.get('topic');
+    document.getElementById("score").textContent = 
+      `Your Score in ${topic}: ${score} / ${total}`;
+
+    let leaderboard = JSON.parse(localStorage.getItem("leaderboard")) || [];
+    leaderboard.push({ topic, score });
+    leaderboard.sort((a,b) => b.score - a.score);
+    leaderboard = leaderboard.slice(0,5);
+    localStorage.setItem("leaderboard", JSON.stringify(leaderboard));
+
+    const list = document.getElementById("leaderboard");
+    leaderboard.forEach(entry => {
+      let li = document.createElement("li");
+      li.textContent = `${entry.topic} - ${entry.score}`;
+      list.appendChild(li);
+    });
+
+    function restartQuiz() {
+      window.location.href = "index.html";
+    }
+  </script>
+</body>
+</html>
