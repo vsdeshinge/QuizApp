@@ -3,44 +3,141 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quiz Result</title>
+  <title>Quiz Scoreboard</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Montserrat', sans-serif;
+      background: #f9f9f9;
+      color: #1a1a1a;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      padding: 10px 15px;
+      background: #fff;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    header img {
+      height: 36px;
+      max-width: 100%;
+    }
+
+    /* Container */
+    .container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 20px;
+      max-width: 500px;
+      margin: auto;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      width: 90%;
+    }
+
+    h1 {
+      font-size: 2rem;
+      color: #363795;
+      margin-bottom: 15px;
+    }
+
+    p {
+      font-size: 1.1rem;
+      margin: 8px 0;
+      color: #444;
+      font-weight: 500;
+    }
+
+    /* Button */
+    button {
+      background: linear-gradient(90deg, #0061ff, #363795);
+      color: #fff;
+      padding: 14px;
+      font-size: 1rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 20px;
+      width: 100%;
+      max-width: 250px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      h1 {
+        font-size: 1.8rem;
+      }
+      p {
+        font-size: 1rem;
+      }
+      button {
+        font-size: 0.95rem;
+        padding: 12px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      header img {
+        height: 30px;
+      }
+      .container {
+        padding: 15px;
+      }
+      h1 {
+        font-size: 1.5rem;
+      }
+      p {
+        font-size: 0.95rem;
+      }
+      button {
+        font-size: 0.9rem;
+        padding: 12px;
+        max-width: 100%;
+      }
+    }
+  </style>
 </head>
 <body>
   <header>
     <img src="assets/logo.png" alt="VCE Logo">
   </header>
 
-  <div class="quiz-box">
-    <h2>Quiz Completed!</h2>
-    <p id="score" class="score-text"></p>
-    <h3>Leaderboard (Top 5)</h3>
-    <ul id="leaderboard" class="leaderboard"></ul>
-    <button onclick="restartQuiz()">Try Again</button>
+  <div class="container" id="score-container">
+    <h1>🎉 Quiz Completed!</h1>
+    <p id="score-text"></p>
+    <p id="percentage-text"></p>
+    <button onclick="playAgain()">Play Again</button>
   </div>
 
   <script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const score = parseInt(urlParams.get('score'));
-    const total = parseInt(urlParams.get('total'));
-    const topic = urlParams.get('topic');
-    document.getElementById("score").textContent = 
-      `Your Score in ${topic}: ${score} / ${total}`;
+    document.addEventListener("DOMContentLoaded", () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const score = parseInt(urlParams.get("score"));
+      const total = parseInt(urlParams.get("total"));
 
-    let leaderboard = JSON.parse(localStorage.getItem("leaderboard")) || [];
-    leaderboard.push({ topic, score });
-    leaderboard.sort((a,b) => b.score - a.score);
-    leaderboard = leaderboard.slice(0,5);
-    localStorage.setItem("leaderboard", JSON.stringify(leaderboard));
-
-    const list = document.getElementById("leaderboard");
-    leaderboard.forEach(entry => {
-      let li = document.createElement("li");
-      li.textContent = `${entry.topic} - ${entry.score}`;
-      list.appendChild(li);
+      document.getElementById("score-text").textContent = `You scored ${score} out of ${total}`;
+      document.getElementById("percentage-text").textContent = `Your Accuracy: ${((score / total) * 100).toFixed(2)}%`;
     });
 
-    function restartQuiz() {
+    function playAgain() {
       window.location.href = "index.html";
     }
   </script>
