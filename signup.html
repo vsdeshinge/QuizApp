@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vaishnavi Education - Registration</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background: linear-gradient(135deg, #0061ff, #363795);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      color: #fff;
+    }
+    .container {
+      background: #fff;
+      color: #333;
+      padding: 25px 30px;
+      border-radius: 12px;
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+      width: 90%;
+      max-width: 650px;
+      text-align: center;
+      overflow-y: auto;
+      max-height: 95vh;
+    }
+    .logo {
+      height: 70px;
+      margin-bottom: 10px;
+    }
+    h2 {
+      margin-bottom: 15px;
+      color: #363795;
+    }
+    input, select, textarea {
+      width: 90%;
+      padding: 10px;
+      margin: 6px 0;
+      border: 1.5px solid #ccc;
+      border-radius: 6px;
+      font-size: 14px;
+      transition: border-color 0.3s ease;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: #0061ff;
+      outline: none;
+      box-shadow: 0 0 6px rgba(0, 97, 255, 0.2);
+    }
+    button {
+      background: linear-gradient(90deg, #0061ff, #363795);
+      color: #fff;
+      border: none;
+      padding: 12px;
+      margin-top: 12px;
+      width: 95%;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+    .alert {
+      margin-top: 12px;
+      padding: 10px;
+      border-radius: 5px;
+      font-size: 14px;
+      display: none;
+    }
+    .alert.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    .alert.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    .qualification-group {
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 6px;
+      background: #f9f9f9;
+    }
+    .add-btn {
+      background: #28a745;
+      margin-top: 8px;
+      width: auto;
+      padding: 8px 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <img src="assets/logo.png" alt="Vaishnavi Logo" class="logo">
+    <h2>Student Registration Form</h2>
+    <form id="signupForm">
+      <input type="text" id="studentName" placeholder="Student Name" required><br>
+      <input type="text" id="fatherName" placeholder="Father Name" required><br>
+      <input type="text" id="motherName" placeholder="Mother Name"><br>
+      <textarea id="address" placeholder="Address" rows="2"></textarea><br>
+      <input type="text" id="postOffice" placeholder="Post Office"><br>
+      <input type="text" id="pincode" placeholder="Pincode"><br>
+      <input type="text" id="district" placeholder="District"><br>
+      <input type="text" id="phone" placeholder="Phone No" required><br>
+      <label>Date of Birth:</label>
+      <input type="date" id="dob"><br>
+      <input type="text" id="category" placeholder="Category"><br>
+      <label>Course Applied For:</label>
+      <input type="text" id="course" placeholder="Course Name" required><br>
+
+      <!-- Login Credentials -->
+      <input type="text" id="username" placeholder="Create Username" required><br>
+      <input type="password" id="password" placeholder="Create Password" required><br>
+
+      <!-- Education Qualification Section -->
+      <h3 style="margin-top:10px;color:#363795;">Educational Qualification</h3>
+      <div id="qualifications-container">
+        <div class="qualification-group">
+          <input type="text" placeholder="Exam Passed" class="exam"><br>
+          <input type="text" placeholder="Year" class="year"><br>
+          <input type="text" placeholder="Board/University" class="board"><br>
+          <input type="text" placeholder="Percentage %" class="percentage"><br>
+        </div>
+      </div>
+      <button type="button" class="add-btn" id="addQualification">+ Add More</button>
+
+      <textarea id="computerExposure" placeholder="Computer Exposure (if any)" rows="2"></textarea><br>
+
+      <button type="submit">Submit Registration</button>
+    </form>
+    <div class="alert" id="message"></div>
+  </div>
+
+  <script type="module">
+    import { db } from "./firebase-config.js";
+    import { doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const messageBox = document.getElementById("message");
+    const container = document.getElementById("qualifications-container");
+
+    // Add new qualification field dynamically
+    document.getElementById("addQualification").addEventListener("click", () => {
+      const div = document.createElement("div");
+      div.classList.add("qualification-group");
+      div.innerHTML = `
+        <input type="text" placeholder="Exam Passed" class="exam"><br>
+        <input type="text" placeholder="Year" class="year"><br>
+        <input type="text" placeholder="Board/University" class="board"><br>
+        <input type="text" placeholder="Percentage %" class="percentage"><br>
+      `;
+      container.appendChild(div);
+    });
+
+    document.getElementById("signupForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const username = document.getElementById("username").value.trim();
+
+      if (!username) {
+        messageBox.textContent = "⚠️ Username is required.";
+        messageBox.className = "alert error";
+        messageBox.style.display = "block";
+        return;
+      }
+
+      // Collect qualifications dynamically
+      const qualifications = [];
+      document.querySelectorAll(".qualification-group").forEach(group => {
+        qualifications.push({
+          exam: group.querySelector(".exam").value,
+          year: group.querySelector(".year").value,
+          board: group.querySelector(".board").value,
+          percentage: group.querySelector(".percentage").value
+        });
+      });
+
+      try {
+        const userRef = doc(db, "users", username);
+        const userSnap = await getDoc(userRef);
+
+        if (userSnap.exists()) {
+          messageBox.textContent = "❌ Username already exists!";
+          messageBox.className = "alert error";
+          messageBox.style.display = "block";
+          return;
+        }
+
+        await setDoc(userRef, {
+          studentName: document.getElementById("studentName").value,
+          fatherName: document.getElementById("fatherName").value,
+          motherName: document.getElementById("motherName").value,
+          address: document.getElementById("address").value,
+          postOffice: document.getElementById("postOffice").value,
+          pincode: document.getElementById("pincode").value,
+          district: document.getElementById("district").value,
+          phone: document.getElementById("phone").value,
+          dob: document.getElementById("dob").value,
+          category: document.getElementById("category").value,
+          course: document.getElementById("course").value,
+          username: username,
+          password: document.getElementById("password").value,
+          qualifications: qualifications,
+          computerExposure: document.getElementById("computerExposure").value,
+          dateSubmitted: new Date().toISOString()
+        });
+
+        messageBox.textContent = "✅ Registration submitted successfully!";
+        messageBox.className = "alert success";
+        messageBox.style.display = "block";
+
+        document.getElementById("signupForm").reset();
+        container.innerHTML = `<div class="qualification-group">
+          <input type="text" placeholder="Exam Passed" class="exam"><br>
+          <input type="text" placeholder="Year" class="year"><br>
+          <input type="text" placeholder="Board/University" class="board"><br>
+          <input type="text" placeholder="Percentage %" class="percentage"><br>
+        </div>`;
+
+      } catch (error) {
+        messageBox.textContent = "❌ Error: " + error.message;
+        messageBox.className = "alert error";
+        messageBox.style.display = "block";
+      }
+    });
+  </script>
+</body>
+</html>

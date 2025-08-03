@@ -7,13 +7,7 @@
   <link rel="stylesheet" href="style.css">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&family=Raleway:wght@700&display=swap" rel="stylesheet">
   <style>
-    /* ---------- Reset ---------- */
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Montserrat', sans-serif;
       background-color: #fff;
@@ -22,10 +16,9 @@
       display: flex;
       flex-direction: column;
     }
-
-    /* ---------- Header ---------- */
     header {
       display: flex;
+      justify-content: space-between;
       align-items: center;
       padding: 15px 20px;
       background: #fff;
@@ -34,13 +27,23 @@
       top: 0;
       z-index: 1000;
     }
-
     header img {
       height: 40px;
       max-width: 120px;
     }
-
-    /* ---------- Container ---------- */
+    .logout-btn {
+      background: #ff3b30;
+      color: #fff;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.2s ease;
+    }
+    .logout-btn:hover {
+      background: #e02e24;
+    }
     .container {
       margin: auto;
       padding: 20px;
@@ -48,21 +51,17 @@
       width: 100%;
       max-width: 500px;
     }
-
     h1 {
       font-family: 'Raleway', sans-serif;
       font-size: 2rem;
       color: #363795;
       margin-bottom: 10px;
     }
-
     p {
       font-size: 1.1rem;
       margin-bottom: 25px;
       color: #444;
     }
-
-    /* ---------- Buttons ---------- */
     .topic-buttons {
       display: flex;
       flex-direction: column;
@@ -70,7 +69,6 @@
       gap: 15px;
       width: 100%;
     }
-
     .topic-buttons button {
       width: 100%;
       max-width: 320px;
@@ -84,47 +82,26 @@
       cursor: pointer;
       transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
-
     .topic-buttons button:hover {
       transform: translateY(-2px);
       box-shadow: 0 4px 8px rgba(0,0,0,0.15);
     }
-
-    /* ---------- Responsive Design ---------- */
     @media (max-width: 768px) {
-      h1 {
-        font-size: 1.8rem;
-      }
-
-      .topic-buttons button {
-        font-size: 1rem;
-        padding: 12px;
-      }
+      h1 { font-size: 1.8rem; }
+      .topic-buttons button { font-size: 1rem; padding: 12px; }
     }
-
     @media (max-width: 480px) {
-      header img {
-        height: 32px;
-      }
-
-      h1 {
-        font-size: 1.5rem;
-      }
-
-      p {
-        font-size: 1rem;
-      }
-
-      .topic-buttons button {
-        max-width: 100%;
-        font-size: 0.95rem;
-      }
+      header img { height: 32px; }
+      h1 { font-size: 1.5rem; }
+      p { font-size: 1rem; }
+      .topic-buttons button { max-width: 100%; font-size: 0.95rem; }
     }
   </style>
 </head>
 <body>
   <header>
     <img src="assets/logo.png" alt="VCE Logo">
+    <button id="logout-btn" class="logout-btn">Logout</button>
   </header>
 
   <div class="container">
@@ -137,27 +114,36 @@
   </div>
 
   <script>
-    // Fetch topics from questions.json
+    // ✅ Redirect to login if user is not logged in
+    const currentUser = localStorage.getItem("loggedInUser");
+    if (!currentUser) {
+      window.location.href = "login.html";
+    }
 
-  // Fetch sections (technologies)
-  fetch("sections.json")
-    .then(response => response.json())
-    .then(data => {
-      const topicContainer = document.getElementById("topic-buttons");
-      data.technologies.forEach(tech => {
-        const button = document.createElement("button");
-        button.textContent = tech;
-        button.onclick = () => startQuiz(tech);
-        topicContainer.appendChild(button);
-      });
-    })
-    .catch(error => console.error("Error loading sections:", error));
+    // ✅ Logout button
+    document.getElementById("logout-btn").addEventListener("click", () => {
+      localStorage.removeItem("loggedInUser");
+      window.location.href = "login.html";
+    });
 
-  function startQuiz(tech) {
-    window.location.href = "question.html?topic=" + encodeURIComponent(tech);
-  }
-</script>
+    // ✅ Load quiz topics dynamically
+    fetch("sections.json")
+      .then(response => response.json())
+      .then(data => {
+        const topicContainer = document.getElementById("topic-buttons");
+        data.technologies.forEach(tech => {
+          const button = document.createElement("button");
+          button.textContent = tech;
+          button.className = "topic-btn";
+          button.onclick = () => startQuiz(tech);
+          topicContainer.appendChild(button);
+        });
+      })
+      .catch(error => console.error("Error loading sections:", error));
 
+    function startQuiz(tech) {
+      window.location.href = "question.html?topic=" + encodeURIComponent(tech);
+    }
   </script>
 </body>
 </html>

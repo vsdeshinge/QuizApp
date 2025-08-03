@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VCE Quiz App - Login</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&family=Raleway:wght@700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background-color: #fff;
+      color: #1a1a1a;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .login-container {
+      background: #fff;
+      padding: 40px 30px;
+      border-radius: 12px;
+      max-width: 400px;
+      width: 100%;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+      text-align: center;
+    }
+
+    .login-container img {
+      height: 60px;
+      margin-bottom: 20px;
+    }
+
+    .login-container h1 {
+      font-family: 'Raleway', sans-serif;
+      font-size: 1.8rem;
+      color: #363795;
+      margin-bottom: 10px;
+    }
+
+    .login-container p {
+      font-size: 1rem;
+      color: #555;
+      margin-bottom: 20px;
+    }
+
+    .input-field {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 1rem;
+    }
+
+    .login-btn {
+      width: 100%;
+      background: linear-gradient(90deg, #0061ff, #363795);
+      color: #fff;
+      border: none;
+      padding: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .login-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+
+    .error-message {
+      color: red;
+      margin-top: 10px;
+      font-size: 0.9rem;
+      display: none;
+    }
+
+    @media (max-width: 480px) {
+      .login-container {
+        padding: 30px 20px;
+      }
+
+      .login-container h1 {
+        font-size: 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <img src="assets/logo.png" alt="VCE Logo">
+    <h1>Welcome to VCE Quiz App</h1>
+    <p>Please sign in with your credentials</p>
+    <input type="text" id="username" class="input-field" placeholder="Username" required>
+    <input type="password" id="password" class="input-field" placeholder="Password" required>
+    <button class="login-btn" id="login-btn">Login</button>
+    <p id="error-message" class="error-message">Invalid username or password</p>
+  </div>
+
+  <script type="module">
+    import { db } from "./firebase-config.js";
+    import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    document.getElementById("login-btn").addEventListener("click", async () => {
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value.trim();
+      const errorMsg = document.getElementById("error-message");
+
+      if (!username || !password) {
+        errorMsg.textContent = "Please enter both username and password.";
+        errorMsg.style.display = "block";
+        return;
+      }
+
+      try {
+        const userRef = doc(db, "users", username);
+        const userSnap = await getDoc(userRef);
+
+        if (userSnap.exists()) {
+          const userData = userSnap.data();
+          if (userData.password === password) {
+            localStorage.setItem("loggedInUser", username);
+            window.location.href = "index.html";
+          } else {
+            errorMsg.textContent = "Invalid password.";
+            errorMsg.style.display = "block";
+          }
+        } else {
+          errorMsg.textContent = "Username not found.";
+          errorMsg.style.display = "block";
+        }
+      } catch (error) {
+        console.error("Login error:", error);
+        errorMsg.textContent = "Error logging in. Try again.";
+        errorMsg.style.display = "block";
+      }
+    });
+  </script>
+</body>
+</html>
