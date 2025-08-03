@@ -34,7 +34,10 @@
       padding: 20px;
       border-radius: 10px;
       box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-      text-align: center;
+      display: flex;
+      flex-direction: column;
+      height: 70vh;
+      justify-content: space-between;
       width: 90%;
     }
 
@@ -65,36 +68,47 @@
 
     /* Question */
     #question {
-      font-size: 1.2rem;
-      margin-bottom: 15px;
+      font-size: 1.3rem;
       word-wrap: break-word;
+      font-weight: 600;
+      text-align: left;
+      flex-grow: 1;
+      margin-bottom: 15px;
     }
 
-    /* Options */
-    .options label {
+    /* Options at bottom */
+    .options {
+      margin-top: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .options button {
       display: block;
+      width: 100%;
       background: #f5f5f5;
-      padding: 12px;
-      margin: 8px 0;
+      padding: 14px;
+      margin: 6px 0;
       border-radius: 6px;
       cursor: pointer;
       text-align: left;
-      transition: background 0.3s ease;
       font-size: 1rem;
-      line-height: 1.4rem;
+      border: 2px solid transparent;
+      transition: background 0.3s ease, border 0.3s ease;
     }
 
-    .options input {
-      margin-right: 10px;
-      transform: scale(1.1);
-    }
-
-    .options label:hover {
+    .options button:hover {
       background: #e0e7ff;
     }
 
+    .options button.selected {
+      background: linear-gradient(90deg, #0061ff, #363795);
+      color: #fff;
+      border: 2px solid #363795;
+    }
+
     /* Next Button */
-    button {
+    button.next-btn {
       background: linear-gradient(90deg, #0061ff, #363795);
       color: #fff;
       padding: 14px;
@@ -108,40 +122,25 @@
       transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
 
-    button:hover {
+    button.next-btn:hover {
       transform: translateY(-2px);
       box-shadow: 0 4px 8px rgba(0,0,0,0.15);
     }
 
-    /* Responsive Adjustments */
-    @media (max-width: 768px) {
+    /* Responsive */
+    @media (max-width: 480px) {
       .quiz-box {
-        padding: 15px;
+        padding: 12px;
+        height: 80vh;
       }
       #question {
         font-size: 1.1rem;
       }
-      button {
+      .options button {
         font-size: 0.95rem;
-      }
-    }
-
-    @media (max-width: 480px) {
-      header img {
-        height: 30px;
-      }
-      .quiz-box {
-        margin: 15px auto;
         padding: 12px;
       }
-      #question {
-        font-size: 1rem;
-      }
-      .options label {
-        font-size: 0.95rem;
-        padding: 10px;
-      }
-      button {
+      button.next-btn {
         font-size: 0.9rem;
         padding: 12px;
       }
@@ -154,13 +153,16 @@
   </header>
 
   <div class="quiz-box">
-    <div class="progress-bar">
-      <div id="progress" class="progress-fill"></div>
+    <div>
+      <div class="progress-bar">
+        <div id="progress" class="progress-fill"></div>
+      </div>
+      <div class="timer">Time Left: <span id="time">20</span>s</div>
+      <h2 id="question"></h2>
     </div>
-    <div class="timer">Time Left: <span id="time">20</span>s</div>
-    <h2 id="question"></h2>
+
     <div class="options" id="options"></div>
-    <button onclick="nextQuestion()">Next</button>
+    <button class="next-btn" onclick="nextQuestion()">Next</button>
   </div>
 
   <script>
@@ -168,6 +170,7 @@
     let currentQuestion = 0;
     let score = 0;
     let timer;
+    let selectedOption = null;
     const urlParams = new URLSearchParams(window.location.search);
     const topic = urlParams.get('topic');
 
@@ -194,24 +197,26 @@
     function showQuestion() {
       clearInterval(timer);
       startTimer();
+      selectedOption = null;
       let q = questions[currentQuestion];
       document.getElementById("question").textContent = q.question;
       let optionsHtml = "";
-      q.options.forEach(option => {
-        optionsHtml += `
-          <label>
-            <input type="radio" name="answer" value="${option}"> ${option}
-          </label>
-        `;
+      q.options.forEach((option) => {
+        optionsHtml += `<button onclick="selectOption(this,'${option}')">${option}</button>`;
       });
       document.getElementById("options").innerHTML = optionsHtml;
       document.getElementById("progress").style.width = 
         ((currentQuestion+1)/questions.length)*100 + "%";
     }
 
+    function selectOption(button, value) {
+      document.querySelectorAll(".options button").forEach(btn => btn.classList.remove("selected"));
+      button.classList.add("selected");
+      selectedOption = value;
+    }
+
     function nextQuestion() {
-      let selected = document.querySelector('input[name="answer"]:checked');
-      if (selected && selected.value === questions[currentQuestion].answer) {
+      if (selectedOption && selectedOption === questions[currentQuestion].answer) {
         score++;
       }
       currentQuestion++;
