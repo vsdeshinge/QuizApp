@@ -117,7 +117,7 @@
 <body>
   <div class="login-container">
     <img src="assets/logo.png" alt="VCE Logo">
-    <h1>Welcome to VCE <br>smartprep app<br></h1>
+    <h1>Welcome to VCE <br>SmartPrep App</h1>
     <p>Please sign in with your credentials</p>
     <input type="text" id="username" class="input-field" placeholder="Username" required>
     <input type="password" id="password" class="input-field" placeholder="Password" required>
@@ -144,6 +144,14 @@
         return;
       }
 
+      // ✅ Admin login check
+      if (username === "admin" && password === "vaishu") {
+        localStorage.setItem("loggedInUser", username);
+        window.location.href = "Questionpush.html";
+        return;
+      }
+
+      // ✅ Normal user login from Firestore
       try {
         const userRef = doc(db, "users", username);
         const userSnap = await getDoc(userRef);
