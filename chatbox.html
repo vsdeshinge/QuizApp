@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VCE Chatbox</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background: #f5f5f5;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .chat-container {
+      width: 90%;
+      max-width: 500px;
+      height: 85vh;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .chat-header {
+      background: linear-gradient(90deg, #0061ff, #363795);
+      color: white;
+      padding: 15px;
+      text-align: center;
+      font-weight: 600;
+      font-size: 1.2rem;
+    }
+    .chat-messages {
+      flex: 1;
+      padding: 10px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    .message {
+      max-width: 70%;
+      padding: 10px;
+      margin: 6px;
+      border-radius: 10px;
+      word-wrap: break-word;
+      font-size: 0.95rem;
+    }
+    .me {
+      align-self: flex-end;
+      background: #0061ff;
+      color: white;
+      border-bottom-right-radius: 0;
+    }
+    .you {
+      align-self: flex-start;
+      background: #e4e6eb;
+      color: #333;
+      border-bottom-left-radius: 0;
+    }
+    .chat-input {
+      display: flex;
+      padding: 10px;
+      border-top: 1px solid #ddd;
+      background: #fff;
+    }
+    .chat-input input {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      outline: none;
+      font-size: 0.95rem;
+    }
+    .chat-input button {
+      margin-left: 10px;
+      background: linear-gradient(90deg, #0061ff, #363795);
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .chat-input button:hover {
+      opacity: 0.9;
+    }
+  </style>
+</head>
+<body>
+  <div class="chat-container">
+    <div class="chat-header">VCE Chatbox</div>
+    <div id="chatMessages" class="chat-messages"></div>
+    <div class="chat-input">
+      <input type="text" id="messageInput" placeholder="Type a message...">
+      <button id="sendBtn">Send</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import { db } from "./firebase-config.js";
+    import { doc, getDoc, updateDoc, arrayUnion, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const chatboxId = "mainchat"; // fixed chatbox ID
+    const messagesContainer = document.getElementById("chatMessages");
+    const inputField = document.getElementById("messageInput");
+    const sendBtn = document.getElementById("sendBtn");
+
+    // Load messages in real-time
+    const chatRef = doc(db, "chatbox", chatboxId);
+    onSnapshot(chatRef, (snapshot) => {
+      messagesContainer.innerHTML = "";
+      if (snapshot.exists()) {
+        const data = snapshot.data();
+        (data.messages || []).sort((a,b)=>a.timestamp-b.timestamp).forEach(msg => {
+          const div = document.createElement("div");
+          div.classList.add("message", msg.sender === "me" ? "me" : "you");
+          div.textContent = msg.text;
+          messagesContainer.appendChild(div);
+        });
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      }
+    });
+
+    // Send message
+    async function sendMessage() {
+      const text = inputField.value.trim();
+      if (!text) return;
+
+      const newMessage = {
+        sender: "me", // change to "you" for other side
+        text: text,
+        timestamp: Date.now()
+      };
+
+      const docSnap = await getDoc(chatRef);
+      if (docSnap.exists()) {
+        await updateDoc(chatRef, {
+          messages: arrayUnion(newMessage)
+        });
+      } else {
+        await setDoc(chatRef, { messages: [newMessage] });
+      }
+
+      inputField.value = "";
+    }
+
+    sendBtn.addEventListener("click", sendMessage);
+    inputField.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") sendMessage();
+    });
+  </script>
+</body>
+</html>
