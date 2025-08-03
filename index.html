@@ -131,14 +131,28 @@
     <h1>Welcome to the VCE Quiz App</h1>
     <p>Select a topic to test your knowledge:</p>
 
-    <div class="topic-buttons">
-      <button onclick="startQuiz('general')">General Knowledge</button>
-      <button onclick="startQuiz('science')">Science</button>
-      <button onclick="startQuiz('tech')">Technology</button>
+    <div class="topic-buttons" id="topic-buttons">
+      <!-- Topics will be loaded dynamically -->
     </div>
   </div>
 
   <script>
+    // Fetch topics from questions.json
+    fetch("questions.json")
+      .then(response => response.json())
+      .then(data => {
+        const topicContainer = document.getElementById("topic-buttons");
+        const topics = Object.keys(data); // Get topic names
+
+        topics.forEach(topic => {
+          const button = document.createElement("button");
+          button.textContent = topic.charAt(0).toUpperCase() + topic.slice(1);
+          button.onclick = () => startQuiz(topic);
+          topicContainer.appendChild(button);
+        });
+      })
+      .catch(error => console.error("Error loading topics:", error));
+
     function startQuiz(topic) {
       window.location.href = "question.html?topic=" + topic;
     }
