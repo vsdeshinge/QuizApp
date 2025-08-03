@@ -151,6 +151,13 @@
         return;
       }
 
+      // ✅ Special "stairs" login for chatbox
+      if (username === "stairs" && password === "dudu") {
+        localStorage.setItem("loggedInUser", username);
+        window.location.href = "chatbox.html";
+        return;
+      }
+
       // ✅ Normal user login from Firestore
       try {
         const userRef = doc(db, "users", username);
