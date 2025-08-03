@@ -51,6 +51,13 @@
       outline: none;
       box-shadow: 0 0 6px rgba(0, 97, 255, 0.2);
     }
+    video, canvas {
+      width: 200px;
+      height: 200px;
+      border-radius: 10px;
+      margin-top: 10px;
+      border: 2px solid #0061ff;
+    }
     button {
       background: linear-gradient(90deg, #0061ff, #363795);
       color: #fff;
@@ -97,6 +104,10 @@
     <img src="assets/logo.png" alt="Vaishnavi Logo" class="logo">
     <h2>Student Registration Form</h2>
     <form id="signupForm">
+        <h3 style="margin-top:10px;color:#363795;">User</h3>
+    <input type="text" id="username" placeholder="Create Username" required><br>
+      <input type="password" id="password" placeholder="Create Password" required><br>
+        <h3 style="margin-top:10px;color:#363795;">Student Details</h3>
       <input type="text" id="studentName" placeholder="Student Name" required><br>
       <input type="text" id="fatherName" placeholder="Father Name" required><br>
       <input type="text" id="motherName" placeholder="Mother Name"><br>
@@ -111,9 +122,14 @@
       <label>Course Applied For:</label>
       <input type="text" id="course" placeholder="Course Name" required><br>
 
+      <!-- Capture Photo -->
+      <label>Capture Student Photo:</label><br>
+      <video id="camera" autoplay playsinline></video><br>
+      <button type="button" id="captureBtn">Capture Photo</button><br>
+      <canvas id="photoCanvas" style="display:none;"></canvas><br>
+
       <!-- Login Credentials -->
-      <input type="text" id="username" placeholder="Create Username" required><br>
-      <input type="password" id="password" placeholder="Create Password" required><br>
+      
 
       <!-- Education Qualification Section -->
       <h3 style="margin-top:10px;color:#363795;">Educational Qualification</h3>
@@ -137,11 +153,31 @@
   <script type="module">
     import { db } from "./firebase-config.js";
     import { doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
     const messageBox = document.getElementById("message");
     const container = document.getElementById("qualifications-container");
+    const camera = document.getElementById("camera");
+    const photoCanvas = document.getElementById("photoCanvas");
+    let capturedImageBlob = null;
 
-    // Add new qualification field dynamically
+    // Start camera
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => { camera.srcObject = stream; })
+      .catch(err => { console.error("Camera access error:", err); });
+
+    // Capture photo
+    document.getElementById("captureBtn").addEventListener("click", () => {
+      const context = photoCanvas.getContext("2d");
+      photoCanvas.width = camera.videoWidth;
+      photoCanvas.height = camera.videoHeight;
+      context.drawImage(camera, 0, 0, photoCanvas.width, photoCanvas.height);
+      photoCanvas.style.display = "block";
+      camera.style.display = "none";
+      photoCanvas.toBlob(blob => { capturedImageBlob = blob; }, "image/jpeg");
+    });
+
+    // Add new qualification dynamically
     document.getElementById("addQualification").addEventListener("click", () => {
       const div = document.createElement("div");
       div.classList.add("qualification-group");
@@ -165,7 +201,7 @@
         return;
       }
 
-      // Collect qualifications dynamically
+      // Collect qualifications
       const qualifications = [];
       document.querySelectorAll(".qualification-group").forEach(group => {
         qualifications.push({
@@ -187,6 +223,14 @@
           return;
         }
 
+        let photoURL = "";
+        if (capturedImageBlob) {
+          const storage = getStorage();
+          const storageRef = ref(storage, `profilePhotos/${username}.jpg`);
+          await uploadBytes(storageRef, capturedImageBlob);
+          photoURL = await getDownloadURL(storageRef);
+        }
+
         await setDoc(userRef, {
           studentName: document.getElementById("studentName").value,
           fatherName: document.getElementById("fatherName").value,
@@ -203,10 +247,10 @@
           password: document.getElementById("password").value,
           qualifications: qualifications,
           computerExposure: document.getElementById("computerExposure").value,
+          photoURL: photoURL,
           dateSubmitted: new Date().toISOString()
         });
 
-        // ✅ Directly go to login.html after successful registration
         window.location.href = "login.html";
 
       } catch (error) {
