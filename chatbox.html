@@ -141,6 +141,11 @@
   </style>
 </head>
 <body>
+    <script>
+  if (!localStorage.getItem("loggedInUser")) {
+    window.location.replace("login.html");
+  }
+</script>
   <!-- User Selection Popup -->
   <div class="popup" id="userPopup">
     <div class="popup-content">
