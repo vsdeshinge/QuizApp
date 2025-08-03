@@ -33,8 +33,8 @@
       height: 70px;
       margin-bottom: 10px;
     }
-    h2 {
-      margin-bottom: 15px;
+    h2, h3 {
+      margin-bottom: 10px;
       color: #363795;
     }
     input, select, textarea {
@@ -50,13 +50,6 @@
       border-color: #0061ff;
       outline: none;
       box-shadow: 0 0 6px rgba(0, 97, 255, 0.2);
-    }
-    video, canvas {
-      width: 200px;
-      height: 200px;
-      border-radius: 10px;
-      margin-top: 10px;
-      border: 2px solid #0061ff;
     }
     button {
       background: linear-gradient(90deg, #0061ff, #363795);
@@ -97,17 +90,28 @@
       width: auto;
       padding: 8px 12px;
     }
+    .username-status {
+      font-size: 0.9rem;
+      margin-top: -5px;
+      margin-bottom: 5px;
+      display: none;
+    }
+    .username-status.available { color: green; }
+    .username-status.taken { color: red; }
   </style>
 </head>
 <body>
   <div class="container">
     <img src="assets/logo.png" alt="Vaishnavi Logo" class="logo">
-    <h2>Student Registration Form</h2>
+    <h2>Create Account</h2>
+
+    <!-- Username and Password First -->
+    <input type="text" id="username" placeholder="Create Username" required>
+    <p id="username-status" class="username-status"></p>
+    <input type="password" id="password" placeholder="Create Password" required><br>
+
+    <h3>Student Details</h3>
     <form id="signupForm">
-        <h3 style="margin-top:10px;color:#363795;">User</h3>
-    <input type="text" id="username" placeholder="Create Username" required><br>
-      <input type="password" id="password" placeholder="Create Password" required><br>
-        <h3 style="margin-top:10px;color:#363795;">Student Details</h3>
       <input type="text" id="studentName" placeholder="Student Name" required><br>
       <input type="text" id="fatherName" placeholder="Father Name" required><br>
       <input type="text" id="motherName" placeholder="Mother Name"><br>
@@ -122,17 +126,8 @@
       <label>Course Applied For:</label>
       <input type="text" id="course" placeholder="Course Name" required><br>
 
-      <!-- Capture Photo -->
-      <label>Capture Student Photo:</label><br>
-      <video id="camera" autoplay playsinline></video><br>
-      <button type="button" id="captureBtn">Capture Photo</button><br>
-      <canvas id="photoCanvas" style="display:none;"></canvas><br>
-
-      <!-- Login Credentials -->
-      
-
       <!-- Education Qualification Section -->
-      <h3 style="margin-top:10px;color:#363795;">Educational Qualification</h3>
+      <h3>Educational Qualification</h3>
       <div id="qualifications-container">
         <div class="qualification-group">
           <input type="text" placeholder="Exam Passed" class="exam"><br>
@@ -153,31 +148,31 @@
   <script type="module">
     import { db } from "./firebase-config.js";
     import { doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
+    const usernameField = document.getElementById("username");
+    const usernameStatus = document.getElementById("username-status");
     const messageBox = document.getElementById("message");
-    const container = document.getElementById("qualifications-container");
-    const camera = document.getElementById("camera");
-    const photoCanvas = document.getElementById("photoCanvas");
-    let capturedImageBlob = null;
 
-    // Start camera
-    navigator.mediaDevices.getUserMedia({ video: true })
-      .then(stream => { camera.srcObject = stream; })
-      .catch(err => { console.error("Camera access error:", err); });
+    // Username availability check
+    usernameField.addEventListener("blur", async () => {
+      const username = usernameField.value.trim();
+      if (!username) return;
 
-    // Capture photo
-    document.getElementById("captureBtn").addEventListener("click", () => {
-      const context = photoCanvas.getContext("2d");
-      photoCanvas.width = camera.videoWidth;
-      photoCanvas.height = camera.videoHeight;
-      context.drawImage(camera, 0, 0, photoCanvas.width, photoCanvas.height);
-      photoCanvas.style.display = "block";
-      camera.style.display = "none";
-      photoCanvas.toBlob(blob => { capturedImageBlob = blob; }, "image/jpeg");
+      const userRef = doc(db, "users", username);
+      const userSnap = await getDoc(userRef);
+
+      if (userSnap.exists()) {
+        usernameStatus.textContent = "❌ Username already taken!";
+        usernameStatus.className = "username-status taken";
+        usernameStatus.style.display = "block";
+      } else {
+        usernameStatus.textContent = "✅ Username available.";
+        usernameStatus.className = "username-status available";
+        usernameStatus.style.display = "block";
+      }
     });
 
-    // Add new qualification dynamically
+    // Add more qualifications dynamically
     document.getElementById("addQualification").addEventListener("click", () => {
       const div = document.createElement("div");
       div.classList.add("qualification-group");
@@ -187,21 +182,31 @@
         <input type="text" placeholder="Board/University" class="board"><br>
         <input type="text" placeholder="Percentage %" class="percentage"><br>
       `;
-      container.appendChild(div);
+      document.getElementById("qualifications-container").appendChild(div);
     });
 
+    // Submit registration
     document.getElementById("signupForm").addEventListener("submit", async (e) => {
       e.preventDefault();
-      const username = document.getElementById("username").value.trim();
+      const username = usernameField.value.trim();
+      const password = document.getElementById("password").value.trim();
 
-      if (!username) {
-        messageBox.textContent = "⚠️ Username is required.";
+      if (!username || !password) {
+        messageBox.textContent = "⚠️ Username and Password are required.";
         messageBox.className = "alert error";
         messageBox.style.display = "block";
         return;
       }
 
-      // Collect qualifications
+      const userRef = doc(db, "users", username);
+      const userSnap = await getDoc(userRef);
+      if (userSnap.exists()) {
+        messageBox.textContent = "❌ Username already exists!";
+        messageBox.className = "alert error";
+        messageBox.style.display = "block";
+        return;
+      }
+
       const qualifications = [];
       document.querySelectorAll(".qualification-group").forEach(group => {
         qualifications.push({
@@ -213,25 +218,9 @@
       });
 
       try {
-        const userRef = doc(db, "users", username);
-        const userSnap = await getDoc(userRef);
-
-        if (userSnap.exists()) {
-          messageBox.textContent = "❌ Username already exists!";
-          messageBox.className = "alert error";
-          messageBox.style.display = "block";
-          return;
-        }
-
-        let photoURL = "";
-        if (capturedImageBlob) {
-          const storage = getStorage();
-          const storageRef = ref(storage, `profilePhotos/${username}.jpg`);
-          await uploadBytes(storageRef, capturedImageBlob);
-          photoURL = await getDownloadURL(storageRef);
-        }
-
         await setDoc(userRef, {
+          username: username,
+          password: password,
           studentName: document.getElementById("studentName").value,
           fatherName: document.getElementById("fatherName").value,
           motherName: document.getElementById("motherName").value,
@@ -243,11 +232,8 @@
           dob: document.getElementById("dob").value,
           category: document.getElementById("category").value,
           course: document.getElementById("course").value,
-          username: username,
-          password: document.getElementById("password").value,
           qualifications: qualifications,
           computerExposure: document.getElementById("computerExposure").value,
-          photoURL: photoURL,
           dateSubmitted: new Date().toISOString()
         });
 
