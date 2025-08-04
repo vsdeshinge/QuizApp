@@ -30,3 +30,5 @@ export const auth = getAuth(app);
 
 export const provider = new GoogleAuthProvider();
 export { signInWithPopup, signOut, onAuthStateChanged };
+export const firebaseApiKey = "AIzaSyAIHLtA_9r40n7X3IYd4pSI7-ELz6N3Z_I"; // your actual API key
+
