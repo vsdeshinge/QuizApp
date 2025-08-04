@@ -6,8 +6,7 @@
   <title>VCE Quiz App - Login</title>
   <link rel="stylesheet" href="style.css">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&family=Raleway:wght@700&display=swap" rel="stylesheet">
-     <link rel="icon" type="image/png" href="assets/fevicon.png">
-        <link rel="icon" type="image/png" href="assets/fevicon.png">
+  <link rel="icon" type="image/png" href="assets/fevicon.png">
   <style>
     * {
       margin: 0;
@@ -63,7 +62,7 @@
       font-size: 1rem;
     }
 
-    .login-btn {
+    .login-btn, .google-btn {
       width: 100%;
       background: linear-gradient(90deg, #0061ff, #363795);
       color: #fff;
@@ -74,11 +73,16 @@
       border-radius: 8px;
       cursor: pointer;
       transition: transform 0.2s ease, box-shadow 0.2s ease;
+      margin-top: 5px;
     }
 
-    .login-btn:hover {
+    .login-btn:hover, .google-btn:hover {
       transform: translateY(-2px);
       box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+
+    .google-btn {
+      background: #db4437;
     }
 
     .signup-link {
@@ -121,9 +125,17 @@
     <img src="assets/logo.png" alt="VCE Logo">
     <h1>Welcome to VCE <br>SmartPrep App</h1>
     <p>Please sign in with your credentials</p>
+
+    <!-- Username and Password Fields -->
     <input type="text" id="username" class="input-field" placeholder="Username" required>
     <input type="password" id="password" class="input-field" placeholder="Password" required>
     <button class="login-btn" id="login-btn">Login</button>
+
+    <p style="margin: 10px 0; font-weight: bold;">OR</p>
+
+    <!-- Google Sign-in Button -->
+    <button class="google-btn" id="google-login-btn">Sign in with Google</button>
+
     <p id="error-message" class="error-message">Invalid username or password</p>
 
     <p class="signup-link">Don't have an account?
@@ -132,9 +144,11 @@
   </div>
 
   <script type="module">
-    import { db } from "./firebase-config.js";
+    import { db, auth, provider } from "./firebase-config.js";
+    import { signInWithPopup } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
+    // ✅ Username-Password Login
     document.getElementById("login-btn").addEventListener("click", async () => {
       const username = document.getElementById("username").value.trim();
       const password = document.getElementById("password").value.trim();
@@ -146,21 +160,18 @@
         return;
       }
 
-      // ✅ Admin login check
       if (username === "admin" && password === "vaishu") {
         localStorage.setItem("loggedInUser", username);
         window.location.href = "Questionpush.html";
         return;
       }
 
-      // ✅ Special "stairs" login for chatbox
       if (username === "stairs" && password === "dudu") {
         localStorage.setItem("loggedInUser", username);
         window.location.href = "chatbox.html";
         return;
       }
 
-      // ✅ Normal user login from Firestore
       try {
         const userRef = doc(db, "users", username);
         const userSnap = await getDoc(userRef);
@@ -182,6 +193,18 @@
         console.error("Login error:", error);
         errorMsg.textContent = "Error logging in. Try again.";
         errorMsg.style.display = "block";
+      }
+    });
+
+    // ✅ Google Login
+    document.getElementById("google-login-btn").addEventListener("click", async () => {
+      try {
+        const result = await signInWithPopup(auth, provider);
+        const user = result.user;
+        localStorage.setItem("loggedInUser", user.uid);
+        window.location.href = "index.html";
+      } catch (error) {
+        alert("Google Sign-in failed: " + error.message);
       }
     });
   </script>

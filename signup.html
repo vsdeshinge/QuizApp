@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Vaishnavi Education - Registration</title>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
-     <link rel="icon" type="image/png" href="assets/fevicon.png">
+  <link rel="icon" type="image/png" href="assets/fevicon.png">
   <style>
     body {
       font-family: 'Montserrat', sans-serif;
@@ -29,6 +29,7 @@
       text-align: center;
       overflow-y: auto;
       max-height: 95vh;
+      display: none;
     }
     .logo {
       height: 70px;
@@ -91,27 +92,34 @@
       width: auto;
       padding: 8px 12px;
     }
-    .username-status {
-      font-size: 0.9rem;
-      margin-top: -5px;
-      margin-bottom: 5px;
-      display: none;
+    #google-auth-container {
+      text-align: center;
     }
-    .username-status.available { color: green; }
-    .username-status.taken { color: red; }
+    #google-login-btn {
+      background: #4285F4;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 20px;
+      width: 250px;
+    }
   </style>
 </head>
 <body>
-  <div class="container">
+
+  <div id="google-auth-container">
+    <h2>Sign in with Google to Register</h2>
+    <button id="google-login-btn">Continue with Google</button>
+  </div>
+
+  <div class="container" id="registration-container">
     <img src="assets/logo.png" alt="Vaishnavi Logo" class="logo">
-    <h2>Create Account</h2>
+    <h2>Complete Your Registration</h2>
 
-    <!-- Username and Password First -->
-    <input type="text" id="username" placeholder="Create Username" required>
-    <p id="username-status" class="username-status"></p>
-    <input type="password" id="password" placeholder="Create Password" required><br>
-
-    <h3>Student Details</h3>
     <form id="signupForm">
       <input type="text" id="studentName" placeholder="Student Name" required><br>
       <input type="text" id="fatherName" placeholder="Father Name" required><br>
@@ -127,7 +135,6 @@
       <label>Course Applied For:</label>
       <input type="text" id="course" placeholder="Course Name" required><br>
 
-      <!-- Education Qualification Section -->
       <h3>Educational Qualification</h3>
       <div id="qualifications-container">
         <div class="qualification-group">
@@ -147,29 +154,20 @@
   </div>
 
   <script type="module">
-    import { db } from "./firebase-config.js";
-    import { doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { db, auth, provider, signInWithPopup } from "./firebase-config.js";
+    import { doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    const usernameField = document.getElementById("username");
-    const usernameStatus = document.getElementById("username-status");
-    const messageBox = document.getElementById("message");
+    let currentUser = null;
 
-    // Username availability check
-    usernameField.addEventListener("blur", async () => {
-      const username = usernameField.value.trim();
-      if (!username) return;
-
-      const userRef = doc(db, "users", username);
-      const userSnap = await getDoc(userRef);
-
-      if (userSnap.exists()) {
-        usernameStatus.textContent = "❌ Username already taken!";
-        usernameStatus.className = "username-status taken";
-        usernameStatus.style.display = "block";
-      } else {
-        usernameStatus.textContent = "✅ Username available.";
-        usernameStatus.className = "username-status available";
-        usernameStatus.style.display = "block";
+    // Google Auth Login
+    document.getElementById("google-login-btn").addEventListener("click", async () => {
+      try {
+        const result = await signInWithPopup(auth, provider);
+        currentUser = result.user;
+        document.getElementById("google-auth-container").style.display = "none";
+        document.getElementById("registration-container").style.display = "block";
+      } catch (error) {
+        alert("Google Login Failed: " + error.message);
       }
     });
 
@@ -186,25 +184,11 @@
       document.getElementById("qualifications-container").appendChild(div);
     });
 
-    // Submit registration
+    // Submit Registration
     document.getElementById("signupForm").addEventListener("submit", async (e) => {
       e.preventDefault();
-      const username = usernameField.value.trim();
-      const password = document.getElementById("password").value.trim();
-
-      if (!username || !password) {
-        messageBox.textContent = "⚠️ Username and Password are required.";
-        messageBox.className = "alert error";
-        messageBox.style.display = "block";
-        return;
-      }
-
-      const userRef = doc(db, "users", username);
-      const userSnap = await getDoc(userRef);
-      if (userSnap.exists()) {
-        messageBox.textContent = "❌ Username already exists!";
-        messageBox.className = "alert error";
-        messageBox.style.display = "block";
+      if (!currentUser) {
+        alert("You must sign in first.");
         return;
       }
 
@@ -219,9 +203,10 @@
       });
 
       try {
-        await setDoc(userRef, {
-          username: username,
-          password: password,
+        await setDoc(doc(db, "users", currentUser.uid), {
+          uid: currentUser.uid,
+          email: currentUser.email,
+          name: currentUser.displayName,
           studentName: document.getElementById("studentName").value,
           fatherName: document.getElementById("fatherName").value,
           motherName: document.getElementById("motherName").value,
@@ -238,12 +223,13 @@
           dateSubmitted: new Date().toISOString()
         });
 
+        alert("✅ Registration completed successfully!");
         window.location.href = "login.html";
 
       } catch (error) {
-        messageBox.textContent = "❌ Error: " + error.message;
-        messageBox.className = "alert error";
-        messageBox.style.display = "block";
+        document.getElementById("message").textContent = "❌ Error: " + error.message;
+        document.getElementById("message").className = "alert error";
+        document.getElementById("message").style.display = "block";
       }
     });
   </script>
